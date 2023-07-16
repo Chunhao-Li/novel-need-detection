@@ -17,7 +17,7 @@ print("length of sentences: ", len(sentences))
 
 result = []
 
-openai.api_key = "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"
+openai.api_key = ""
 
 # prompt = '''Given a computer purchase review data from an e-commerce platform, determine whether the review data contains new requirements. New requirements indicate features that the computer does not currently have. Return 1 (contains new requirements) or 0 (does not contain new requirements). Here are some examples:
 #
