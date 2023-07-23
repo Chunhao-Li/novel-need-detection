@@ -1,57 +1,57 @@
 #-*- coding:utf-8 -*-
+import time
+
 import openai
 import numpy as np
 import pandas as pd
 import pickle
 
-# df = pd.read_excel('../data/new_novel_need.xlsx')
-# sentences = []
-# for _,row in df.iterrows():
-#   sentences.append(row['generate_v2'])
 
-df = pd.read_pickle('../data/gpt_infer_neg.pkl')
-sentences = []
+df = pd.read_csv('../data/novel_valid_generate_v2_sample.csv')
+# df = df.sample(len(df))
+sentences_with_label = []
 for _,row in df.iterrows():
-  sentences.append(row['neg_text'])
-print("length of sentences: ", len(sentences))
+  sentences_with_label.append((row['sentence1'], row['label']))
+print(sentences_with_label[0])
+print("length of sentences: ", len(sentences_with_label))
 
 result = []
 
 openai.api_key = ""
 
-# prompt = '''Given a computer purchase review data from an e-commerce platform, determine whether the review data contains new requirements. New requirements indicate features that the computer does not currently have. Return 1 (contains new requirements) or 0 (does not contain new requirements). Here are some examples:
-#
-# The computer runs fast, but the cooling is lacking. It would be great if it could use a freeze-like technology to cool down in a second. And then there is the screen quality is not good, cracks appeared without much use.  1
-# This computer has a great processing speed and the design is sleek, but the battery life leaves a lot to be desired. I hope in the future they could incorporate solar charging features so I could work all day without worrying about running out of power.  1
-# The laptop is a great choice for people who want a portable gaming experience, though there are a few problems. First, the laptop will get loud/hot very fast on newer games unless you lower the quality a lot. Second, the touchpad is sensitive and you'll find yourself accidently clicking things from time to time. Third, the people who shipped my laptop didn't have a sticker on the package warning about the lithium batteries as well as didn't even put any bubble wrap to keep the laptop safe. Finally, the battery life only last a few hours so you'll have to charge regularly. Other than that, the laptop works great and can play any game I throw at it. I would recommend it to anyone who wants an affordable gaming experience.  0
-# i had to buy this for school but honestly the m1 is a better value, especially refurbished or used. if all you'll be doing is schoolwork, youtube, spotify and mail, this laptop does not feel worth 1000 bucks. i'm too lazy to return it at this point but if i could pick again i would've bought the cheaper m1 macbooks.  0
-#
-# Given the following reviews, please return the judgement result:'''
 
-prompt = '''Given a computer purchase review data from an e-commerce platform, determine whether the review data contains new requirements. New requirements indicate features that the computer does not currently have. Return 1 (contains new requirements) or 0 (does not contain new requirements). Here are some examples:
+prompt = '''Given a computer purchase review, determine whether the review contains “novel needs”. A novel need refers to a function not included in the computer. If there exists novel needs, return 1; if not, or if the comment is meaningless, return 0.
+Here are few examples:
 
-The computer runs fast, but the cooling is lacking. It would be great if it could use a freeze-like technology to cool down in a second. And then there is the screen quality is not good, cracks appeared without much use.  1
-This computer has a great processing speed and the design is sleek, but the battery life leaves a lot to be desired. I hope in the future they could incorporate solar charging features so I could work all day without worrying about running out of power.  1
-The laptop is a great choice for people who want a portable gaming experience, though there are a few problems. First, the laptop will get loud/hot very fast on newer games unless you lower the quality a lot. Second, the touchpad is sensitive and you'll find yourself accidently clicking things from time to time. Third, the people who shipped my laptop didn't have a sticker on the package warning about the lithium batteries as well as didn't even put any bubble wrap to keep the laptop safe. Finally, the battery life only last a few hours so you'll have to charge regularly. Other than that, the laptop works great and can play any game I throw at it. I would recommend it to anyone who wants an affordable gaming experience.  0
-i had to buy this for school but honestly the m1 is a better value, especially refurbished or used. if all you'll be doing is schoolwork, youtube, spotify and mail, this laptop does not feel worth 1000 bucks. i'm too lazy to return it at this point but if i could pick again i would've bought the cheaper m1 macbooks.  0
-I bought this to take my YouTube viewing and general computing on the road. Out of boredom I downloaded a few games yesterday and had quite a pleasant experience! I could actually crank the graphics up most of the way (on an older game, but still!) and kept a steady 60 fps (v-sync'd).I pretty quickly upgraded the RAM and HD. I swapped out the 4GB RAM chip with a 16GB ($88) to give me a total of 20GB (max for this computer). I also upgraded the tiny (but capable) NVMe 128GB hard drive up to 1TB ($109). I downloaded the Windows 10 Home install files onto a USB drive and it went very smoothly. I didn't even need to enter the Windows key, but it might be smart to get your Windows key just incase.Easy mode to do this:- Press Windows key + X.- Right Click Command Prompt (Select Run as Admin)- At the command prompt, type:wmic path SoftwareLicensingService get OA3xOriginalProductKeyThis will reveal the product key. Volume License Product Key Activation.Take a picture of your screen with your phone. But like I said, I didn't need it - it's just in case.The screen isn't anything to write home about but the nuts and bolts of the computer more than make this everything I need when I'm on the road.  0
+The pre-installed software on this computer is helpful, but the bloatware is a nuisance. An innovative idea would be an intelligent software manager that can automatically detect and uninstall unwanted programs.-->1
+I am bringing my review down to 3 stars for now as I had to just send the computer back to the manufacturer because it wouldn't turn on. I have had the computer less than 2 months and already an issue. Before this happened I did like the computer and loved how fast it loaded and operated as just a basic model laptop. However, not even 2 months later it wont turn on and I had to pay to ship to the manufacture to see what the issue is.I bought this as a replacement to the laptop that I had. The one I had was extremely slow and would have an error and restart on its own every once in awhile. This Chromebook is a 1000x faster than the old laptop. It's great for just a computer to have access to the internet. If you don't need much out of a laptop then this one is great, has a couple USB ports and an HDMI port as well as blue tooth ability. I also like how the screen is less reflective so it has less glare. Overall, great product for the short time I have had it!-->0
 
-Given the following reviews, please return the judgement result:'''
-# sent = "The cooling system on this computer is top-notch, it runs as cool as a cucumber even under heavy load. But the glossy screen is a nightmare in bright light, it's like looking into a mirror. I long for a matte screen option that eliminates glare and allows me to work anywhere I want."
+You may have misjudged these examples, their labels are 0, not 1:
+I like this chromebook, it's easy to hook up and because it only runs on chrome doesn't get too complicated. I am 72 yrs old and not really good with technology so it is a bit of learning curve for me. I would certainly recommend it.Edit: I am dissapointed that I can't do video calls on it. The camera only points to me and not the subject. Didn't realize this until recently.
+The MacBook delivers top-notch performance! It’s 14 hours of battery life delivers!!! The bright and colorful display all in is a delightfully portable design. It’s truly worthy of the Air name.
+I needed a new laptop for school, but I also wanted something powerful enough for some casual gaming here and there and maybe some video editing down the line. This notebook is able to do both of those! And it's light enough that I don't feel weighed down when it's in my school bag. I'm not a fan of the red keyboard, but it's no deal breaker. I upgraded to a Samsung 1tb nvme SSD and added 8gb more ram for 16 total. This thing is officially a little powerhouse! MSI customer support is also amazing, they answer the phone right away and are very knowledgeable about all of their products. There's tons and tons of information about their products on their website and youtube page. Thanks to that, upgrading this notebook was easy for me (who's otherwise not super knowledgeable about computers). Money well spent!
 
-for index,sent in enumerate(sentences[:100]):
+Given the following review, please return the judgement result:'''
+
+for index,(sent, true_label) in enumerate(sentences_with_label):
   mess = []
   mess.append({"role": "system", "content": "You are a helpful assistant."})
   mess.append({"role": "user", "content": prompt+sent})
+  while True:
+    try:
+      response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=mess
+      )
+      break
+    except  Exception as e:
+      print(f"Encountered an error: {e}. Retrying in 2 seconds...")
+      time.sleep(2)
 
-  response = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",
-    messages=mess
-  )
 
   cur_result = response['choices'][0]['message']['content']
-  print(index, cur_result)
-  result.append((index, cur_result))
+  print(index, cur_result, true_label)
+  result.append((index, cur_result, true_label))
 
 
 print(result)
@@ -60,5 +60,5 @@ print(result)
 # with open('../generate_v2_novel_need_result.pkl', 'wb') as f:
 #   pickle.dump(result, f)
 #
-with open('../gpt_infer_neg_100_result.pkl', 'wb') as f:
+with open('../generate_v2_sample_gpt_result_prompt5.pkl', 'wb') as f:
   pickle.dump(result, f)
